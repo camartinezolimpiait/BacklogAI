@@ -123,7 +123,7 @@ class ResponseGenerator:
 
     def _create_prompt_improved(self, query: str, context: str) -> str:
         """Create prompt for LLM"""
-        prompt_template = self.get_prompt("IMPROVED").format(context=context)
+        prompt_template = self.get_prompt("PROMPTPBI").format(context=context)
         return f"""{prompt_template}
 
 Context:

@@ -36,10 +36,10 @@ class DocumentRetriever:
             self.client = chromadb.Client()
             self.collection = self.client.get_or_create_collection(collection_name)
             self.load_and_index_pdfs()
-            self.load_and_index_pdfs_from_blob(
-                connection_string=settings.blob_storage_connection_string,
-                container_name=settings.blob_container_name
-            )
+            # self.load_and_index_pdfs_from_blob(
+            #     connection_string=settings.blob_storage_connection_string,
+            #     container_name=settings.blob_container_name
+            # )
             logger.info("DocumentRetriever initialized successfully")
 
         except Exception as e:
