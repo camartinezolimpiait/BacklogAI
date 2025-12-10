@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     azure_openai_deployment_name: Optional[str] = Field(None, env="AZURE_OPENAI_DEPLOYMENT_NAME")
     azure_openai_api_version: Optional[str] = Field(None, env="AZURE_OPENAI_API_VERSION")
     
+    azure_devops_token: Optional[str] = Field(None, env="AZURE_DEVOPS_TOKEN")
+    azure_devops_org_name: Optional[str] = Field(None, env="AZURE_DEVOPS_ORG_NAME")
+    azure_devops_project_name: Optional[str] = Field(None, env="AZURE_DEVOPS_PROJECT_NAME")
+    
 
     # Pinecone
     pinecone_api_key: Optional[str] = Field(None, env="PINECONE_API_KEY")

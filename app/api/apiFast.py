@@ -4,6 +4,7 @@ from fastapi import Request
 
 from fastapi import Body
 
+
 #!/usr/bin/env python3
 """
 EcoMarket RAG Solution - FastAPI API
@@ -188,6 +189,8 @@ async def get_order(orden_servicio: str = FastAPIQuery(..., min_length=14, max_l
 @app.post("/query", response_model=QueryResponse)
 async def query_rag(request: QueryRequest):
     import re
+    from app.api.azure import createworkitem
+    
     try:
         logger.info(f"Processing query: {request.query}")
         # Buscar el patrón en cualquier parte del texto
@@ -224,6 +227,14 @@ async def query_rag(request: QueryRequest):
             documents=documents,
             temperature=request.temperature
         )
+
+        # Ejemplo: crear work item si la respuesta contiene la palabra clave "PBI-001"
+        if "PBI-001" in response["answer"].upper():
+            try:
+                work_item_result = await createworkitem( str_description=response["answer"].upper())
+                logger.info(f"Work item creado en Azure DevOps: {work_item_result}")
+            except Exception as e:
+                logger.error(f"Error al crear work item en Azure DevOps: {str(e)}")
 
         return QueryResponse(
             answer=response["answer"],
