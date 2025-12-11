@@ -231,13 +231,13 @@ async def query_rag(request: QueryRequest):
         # Ejemplo: crear work item si la respuesta contiene la palabra clave "PBI-001"
         if "PBI-001" in response["answer"].upper():
             try:
-                work_item_result = await createworkitem( str_description=response["answer"].upper())
+                work_item_result = createworkitem( str_description=response["answer"])
                 logger.info(f"Work item creado en Azure DevOps: {work_item_result}")
             except Exception as e:
                 logger.error(f"Error al crear work item en Azure DevOps: {str(e)}")
 
         return QueryResponse(
-            answer=response["answer"],
+            answer=response["answer"] + f" {work_item_result} ",
             sources=response["sources"],
             confidence=response["confidence"]
         )

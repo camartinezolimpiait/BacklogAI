@@ -26,27 +26,84 @@ API_URL = f"https://dev.azure.com/{ORG_NAME}/{PROJECT_NAME}/_apis/wit/workitems/
 
 # --- FUNCIÓN PRINCIPAL ---
 
-def createworkitem(str_description: str) -> None:
+def createworkitem(str_description: str) -> str:
     """Crea una nueva Historia de Usuario en Azure DevOps usando la API REST."""
 
-# El JSON que contiene la instrucción del Prompt Avanzado
-# ESTE ES EL JSON QUE CREAMOS ANTERIORMENTE.
-# NOTA: Los saltos de línea (\n) y las comillas escapadas (\\") son cruciales aquí.
+    # Extraer el título de la descripción entre los primeros dos '#'
+    try:
+        first_idx = str_description.index('#') + 1
+        second_idx = str_description.index('#', first_idx)
+        pbiTitle = str_description[first_idx:second_idx].strip()
+    except ValueError:
+        pbiTitle = "Título no encontrado"
+    
+    acceptanceCriteria = ""
+    # Extraer Criterios de Aceptación entre "## Criterios de Aceptación" y el siguiente "##" o el final del texto
+    try:    
+        criteria_start = str_description.index('## Criterios de Aceptación (Job-to-be-done)') + len('## Criterios de Aceptación (Job-to-be-done)')
+        try:
+            criteria_end = str_description.index('## Criterios Técnicos / No Funcionales', criteria_start)
+            acceptanceCriteria = str_description[criteria_start:criteria_end].strip()
+        except ValueError:
+            acceptanceCriteria = str_description[criteria_start:].strip()
+    except ValueError:
+        acceptanceCriteria = ""
+        
+    technicalannex = ""
+    # Extraer Criterios de Aceptación entre "## Criterios de Aceptación" y el siguiente "##" o el final del texto
+    try:    
+        technicalannex_start = str_description.index('## Criterios Técnicos / No Funcionales') + len('## Criterios Técnicos / No Funcionales')
+        try:
+            technicalannex_end = str_description.index('##', technicalannex_start)
+            technicalannex = str_description[technicalannex_start:len(str_description)].strip()
+        except ValueError:
+            technicalannex = str_description[technicalannex_start:].strip()
+    except ValueError:
+        technicalannex = ""    
+        
+    str_description_body = str_description
+    str_description_body = str_description_body.replace(pbiTitle, "")        
+    str_description_body = str_description_body.replace(technicalannex, "")
+    str_description_body = str_description_body.replace(acceptanceCriteria, "")
+    str_description_body = str_description_body.replace("markdown", "")
+    str_description_body = str_description_body.replace("## Criterios de Aceptación (Job-to-be-done)", "")
+    str_description_body = str_description_body.replace("## Criterios Técnicos / No Funcionales", "")
+
+        
+    # Si pbiTitle está vacío, asigna el valor "PBI-001"
+    if not pbiTitle or pbiTitle == "Título no encontrado":
+        pbiTitle = "PBI-001"
+
     WORK_ITEM_BODY = [
         {
             "op": "add",
             "path": "/fields/System.Title",
-            "value": "Generación Automática de Historias de Usuario: Tarea de Prompting AI"
+            "value": f"{pbiTitle}"
         },
         {
             "op": "add",
             "path": "/fields/System.Description",
-            "value": f"Se ha generado automáticamente una historia de usuario basada en la siguiente descripción:\n\n{str_description}"
+            "value": f"\n\n{str_description_body}\n\n"
         },
         {
             "op": "add",
             "path": "/fields/Custom.OITPMOPBIType",
-            "value": "Improvement"
+            "value": "Technical Story"
+        },
+        {
+            "op": "add",
+            "path": "/fields/System.State",
+            "value": "New"
+        },
+        {
+            "op": "add",
+            "path": "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+            "value": f"{acceptanceCriteria}"
+        },
+        {
+            "op": "add",
+            "path": "/fields/Custom.Technicalannex",
+            "value": f"{technicalannex}"
         }
     ]
     # 1. Configurar la Autenticación (Basic Auth con PAT)
@@ -86,6 +143,8 @@ def createworkitem(str_description: str) -> None:
                 print(json.dumps(error_details, indent=2))
             except json.JSONDecodeError:
                 print(response.text)
+                
+        return f"URL en el navegador: {result.get('_links', {}).get('html', {}).get('href')}"
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Error de conexión: {e}")
